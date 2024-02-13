@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>toDo - List</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Arial", sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      h1 {
+        color: #007bff;
+        margin-bottom: 20px;
+        animation: fadeIn 1s ease;
+      }
+
+      form {
+        display: flex;
+        margin-bottom: 20px;
+        animation: fadeIn 1s ease;
+      }
+
+      input[type="text"] {
+        padding: 10px;
+        width: 300px;
+        font-size: 16px;
+        border: 2px solid #007bff;
+        border-radius: 5px 0 0 5px;
+        outline: none;
+        transition: border-color 0.3s ease;
+      }
+
+      input[type="text"]:focus {
+        border-color: #0056b3;
+      }
+
+      button[type="submit"] {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+
+      ul {
+        list-style-type: none;
+        padding: 0;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      li {
+        background-color: #fff;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        animation: fadeIn 1s ease;
+      }
+
+      li span {
+        flex-grow: 1;
+        margin-right: 10px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      li.completed span {
+        text-decoration: line-through;
+      }
+
+      li .delete-btn {
+        padding: 5px 10px;
+        font-size: 14px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      li .delete-btn:hover {
+        background-color: #c82333;
+      }
+
+      .empty-message {
+        color: #888;
+        display: none;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>toDo - List</h1>
+
+    <form>
+      <input type="text" id="taskInput" placeholder="Add a new evil task" />
+      <button type="submit">Add</button>
+    </form>
+
+    <ul id="taskList"></ul>
+    <p id="emptyMessage" class="empty-message">No tasks found.</p>
+
+    <script>
+      const storedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+      storedTasks.forEach((task) => {
+        renderTask(task);
+      });
+
+      document
+        .querySelector("form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const taskInput = document.getElementById("taskInput");
+          const newTask = taskInput.value.trim();
+          if (newTask === "") return;
+
+          const task = {
+            id: Date.now(),
+            name: newTask,
+            completed: false,
+          };
+
+          storedTasks.push(task);
+          localStorage.setItem("tasks", JSON.stringify(storedTasks));
+
+          renderTask(task);
+
+          taskInput.value = "";
+
+          const emptyMessage = document.getElementById("emptyMessage");
+          emptyMessage.style.display = "none";
+        });
+
+      function renderTask(task) {
+        const listItem = document.createElement("li");
+        listItem.setAttribute("data-id", task.id);
+        listItem.classList.add(task.completed ? "completed" : null);
+        listItem.innerHTML = `
+            <input type="checkbox" ${task.completed ? "checked" : ""}>
+            <span>${task.name}</span>
+            <button class="delete-btn">Delete</button>
+          `;
+        document.getElementById("taskList").appendChild(listItem);
+
+        const checkbox = listItem.querySelector('input[type="checkbox"]');
+        checkbox.addEventListener("change", function () {
+          const taskId = parseInt(listItem.getAttribute("data-id"));
+          const taskIndex = storedTasks.findIndex((t) => t.id === taskId);
+          storedTasks[taskIndex].completed = checkbox.checked;
+          localStorage.setItem("tasks", JSON.stringify(storedTasks));
+          listItem.classList.toggle("completed");
+        });
+
+        const deleteBtn = listItem.querySelector(".delete-btn");
+        deleteBtn.addEventListener("click", function () {
+          const taskId = parseInt(listItem.getAttribute("data-id"));
+          storedTasks.splice(
+            storedTasks.findIndex((t) => t.id === taskId),
+            1
+          );
+          localStorage.setItem("tasks", JSON.stringify(storedTasks));
+          listItem.remove();
+          checkEmpty();
+        });
+      }
+
+      function checkEmpty() {
+        const taskList = document.getElementById("taskList");
+        const emptyMessage = document.getElementById("emptyMessage");
+        if (taskList.children.length === 0) {
+          emptyMessage.style.display = "block";
+        } else {
+          emptyMessage.style.display = "none";
+        }
+      }
+
+      checkEmpty();
+    </script>
+  </body>
+</html>
